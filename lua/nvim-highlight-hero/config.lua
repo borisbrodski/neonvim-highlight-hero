@@ -1,17 +1,26 @@
 local M = {}
 
-local default_opts = {
+local function add_match_0_to_9(opts)
+  for i = 0, 9 do
+    opts.keymaps[string.format("match%i", i)]        = string.format("<leader>h%i", i)
+    opts.keymaps[string.format("match_append%i", i)] = string.format("<leader>H%i", i)
+    opts.keymaps[string.format("match_off%i", i)]    = string.format("<leader>ho%i", i)
+  end
+  return opts
+end
+
+local default_opts = add_match_0_to_9({
   keymaps = {
     toggle_auto_highlight = "<leader>hh",
-    match1                = "<leader>h1",
-    match_append1         = "<leader>H1",
-    match_off1            = "<leader>ho1",
-    match2                = "<leader>h2",
-    match_append2         = "<leader>H2",
-    match_off2            = "<leader>ho2",
+    -- Example of the configuration.
+    -- For all 0..9 numbers the default configuration is created by add_match_0_to_9()
+    --
+    -- match1                = "<leader>h1",
+    -- match_append1         = "<leader>H1",
+    -- match_off1            = "<leader>ho1",
   },
   disable_filetype = { 'TelescopePrompt', 'spectre_panel' },
-}
+})
 
 -- Set up user-configured keymaps, globally or for the buffer.
 ---@param buffer boolean Whether the keymaps should be set for the buffer or not.
@@ -40,74 +49,76 @@ function M.set_keymaps(buffer)
     },
   })
 
-  M.set_keymap({
-    name = "Highlight match 1",
-    mode = "v",
-    lhs = M.get_opts().keymaps.match1,
-    rhs = engine.match1,
-    opts = {
-      buffer = buffer,
-      desc = "Activate match 1",
-      silent = true,
-    },
-  })
-  M.set_keymap({
-    name = "Highlight match 1",
-    mode = "n",
-    lhs = M.get_opts().keymaps.match1,
-    rhs = engine.match1,
-    opts = {
-      buffer = buffer,
-      desc = "Activate match 1",
-      silent = true,
-    },
-  })
+  for i = 0, 9 do
+    M.set_keymap({
+      name = string.format("Highlight match %i", i),
+      mode = "v",
+      lhs = M.get_opts().keymaps[string.format("match%i", i)],
+      rhs = function() engine.match(i, false) end,
+      opts = {
+        buffer = buffer,
+        desc = string.format("Activate match %i", i),
+        silent = true,
+      },
+    })
+    M.set_keymap({
+      name = string.format("Highlight match %i", i),
+      mode = "n",
+      lhs = M.get_opts().keymaps[string.format("match%i", i)],
+      rhs = function() engine.match(i, false) end,
+      opts = {
+        buffer = buffer,
+        desc = string.format("Activate match %i", i),
+        silent = true,
+      },
+    })
 
-  M.set_keymap({
-    name = "Highlight append match 1",
-    mode = "n",
-    lhs = M.get_opts().keymaps.match_append1,
-    rhs = engine.match_append1,
-    opts = {
-      buffer = buffer,
-      desc = "Highlight append match 1",
-      silent = true,
-    },
-  })
-  M.set_keymap({
-    name = "Highlight append match 1",
-    mode = "v",
-    lhs = M.get_opts().keymaps.match_append1,
-    rhs = engine.match_append1,
-    opts = {
-      buffer = buffer,
-      desc = "Highlight append match 1",
-      silent = true,
-    },
-  })
+    M.set_keymap({
+      name = string.format("Highlight append match %i", i),
+      mode = "n",
+      lhs = M.get_opts().keymaps[string.format("match_append%i", i)],
+      rhs = function() engine.match(i, true) end,
+      opts = {
+        buffer = buffer,
+        desc = string.format("Highlight append match %i", i),
+        silent = true,
+      },
+    })
+    M.set_keymap({
+      name = string.format("Highlight append match %i", i),
+      mode = "v",
+      lhs = M.get_opts().keymaps[string.format("match_append%i", i)],
+      rhs = function() engine.match_append(i, true) end,
+      opts = {
+        buffer = buffer,
+        desc = string.format("Highlight append match %i", i),
+        silent = true,
+      },
+    })
 
-  M.set_keymap({
-    name = "Highlight match off 1",
-    mode = "n",
-    lhs = M.get_opts().keymaps.match_append1,
-    rhs = engine.match_append1,
-    opts = {
-      buffer = buffer,
-      desc = "Highlight match off 1",
-      silent = true,
-    },
-  })
-  M.set_keymap({
-    name = "Highlight match off 1",
-    mode = "v",
-    lhs = M.get_opts().keymaps.match_off1,
-    rhs = engine.match_off1,
-    opts = {
-      buffer = buffer,
-      desc = "Highlight match off 1",
-      silent = true,
-    },
-  })
+    M.set_keymap({
+      name = string.format("Highlight match off %i", i),
+      mode = "n",
+      lhs = M.get_opts().keymaps[string.format("match_off%i", i)],
+      rhs = function() engine.match_off(i) end,
+      opts = {
+        buffer = buffer,
+        desc = string.format("Highlight match off %i", i),
+        silent = true,
+      },
+    })
+    M.set_keymap({
+      name = string.format("Highlight match off %i", i),
+      mode = "v",
+      lhs = M.get_opts().keymaps[string.format("match_off%i", i)],
+      rhs = function() engine.match_off(i) end,
+      opts = {
+        buffer = buffer,
+        desc = string.format("Highlight match off %i", i),
+        silent = true,
+      },
+    })
+  end
 end
 
 -- Check if a keymap should be added before setting it.
@@ -135,7 +146,6 @@ end
 
 
 function M.setup(user_opts)
-  print("setting up")
   M.user_opts = M.merge_opts(M.translate_opts(default_opts), user_opts)
   M.set_keymaps(false)
   vim.cmd([[

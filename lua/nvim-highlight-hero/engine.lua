@@ -3,9 +3,10 @@ local M = {}
 -- Get visually selected text
 -- URL: https://neovim.discourse.group/t/function-that-return-visually-selected-text/1601
 local function get_visual_selection()
-  local s_start = vim.fn.getpos("'<")
-  local s_end = vim.fn.getpos("'>")
+  local s_start = vim.fn.getpos("v")
+  local s_end = vim.fn.getpos(".")
   local n_lines = math.abs(s_end[2] - s_start[2]) + 1
+  print(vim.inspect(s_start) .. " --> " .. vim.inspect(s_end))
   local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
   lines[1] = string.sub(lines[1], s_start[3], -1)
   if n_lines == 1 then
@@ -32,76 +33,73 @@ end
 
 -- Init current buffer if not initialized already
 local function init_buffer()
-  vim.b.nvim_highlight_hero = vim.b.nvim_highlight_hero or {
-    matches = {},
-  }
+  if not vim.b.nvim_highlight_hero then
+    local init_state = {
+      matches = {}
+    }
+    for buf_num = 0, 9 do
+      init_state.matches[buf_num + 1] = {}
+    end
+    vim.b.nvim_highlight_hero = init_state
+  end
+  return vim.b.nvim_highlight_hero
 end
 
 -- Remove match
----@param num number 0-9 for fixed group, -1 for autohighlight
-local function match_uninstall(num)
+---@param buf_num number 0-9 for fixed group, -1 for autohighlight
+function M.match_off(buf_num)
   init_buffer()
   local buffer_config = vim.b.nvim_highlight_hero
-  if buffer_config.matches[num] then
-    for _, v in ipairs(buffer_config.matches[num]) do
+  if buffer_config.matches[buf_num + 1] then
+    for _, v in ipairs(buffer_config.matches[buf_num + 1]) do
       vim.fn.matchdelete(v)
     end
   end
-  buffer_config.matches[num] = nil
+  buffer_config.matches[buf_num + 1] = {}
   vim.b.nvim_highlight_hero = buffer_config
 end
 
 
 -- Install new match for num and pattern
 ---comment
----@param num any 0-9 for fixed group, -1 for autohighlight
+---@param buf_num any 0-9 for fixed group, -1 for autohighlight
 ---@param pattern string regex-pattern to highlight
 ---@param append boolean append to highlight, if true
-local function match_install(num, pattern, append)
+local function match_install(buf_num, pattern, append)
   init_buffer()
   if not append then
-    match_uninstall(num)
+    M.match_off(buf_num)
   end
-  local id = vim.fn.matchadd(get_highlight_group(num), pattern)
+  local id = vim.fn.matchadd(get_highlight_group(buf_num), pattern)
   local buffer_config = vim.b.nvim_highlight_hero
-  local id_list= buffer_config.matches[num] or {}
+  local id_list= buffer_config.matches[buf_num + 1]
   table.insert(id_list, id)
-  buffer_config.matches[num] = id_list
+  buffer_config.matches[buf_num + 1] = id_list
   vim.b.nvim_highlight_hero = buffer_config
 end
 
+---Escape text for usage with \V... regex
+---@param text string to be escaped
+---@return string escaped string
+local function escape_for_V_regex(text)
+  return (string.gsub(text, "\\", "\\\\"))
+end
 
 function M.match(num, append)
-  local text
+  local regex_text
   if vim.api.nvim_get_mode().mode == "n" then
     -- Highlight word under cursor
-    text = vim.fn.expand("<cword>")
+    local text = vim.fn.expand("<cword>")
+    regex_text = "\\<" .. escape_for_V_regex(text) .. "\\>"
   elseif vim.api.nvim_get_mode().mode == "v" then
-    text = get_visual_selection()
+    regex_text = escape_for_V_regex(get_visual_selection())
+    vim.api.nvim_input("<esc>") -- Leave visual mode, TODO: Find a better way
   else
     -- Not supported mode
     return
   end
-  local text_regex = string.gsub(text, "\\", "\\\\")
-  local pattern = "\\V\\<" .. text_regex .. "\\>"
+  local pattern = "\\V" .. regex_text
   match_install(num, pattern, append)
 end
-
-function M.match1()
-  M.match(1, false)
-end
-
-function M.match_append1()
-  M.match(1, true)
-end
-
-function M.match2()
-  M.match(2, false)
-end
-
-function M.match_off1()
-  match_uninstall(1)
-end
-
 
 return M
