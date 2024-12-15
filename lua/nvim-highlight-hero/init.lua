@@ -8,9 +8,10 @@ local config = require("nvim-highlight-hero.config")
 
 M.setup = config.setup
 
+function M.on_cursor_moved()
+end
 
 function M.command_HH()
-  local x = vim.fn.matchadd("IncSearch", "234")
 end
 
 return M
@@ -20,3 +21,6 @@ return M
 -- Help
 -- ====
 -- * Describe highlighting configuration. See config.setup()
+--
+--
+-- print(vim.inspect(s_start) .. " --> " .. vim.inspect(s_end))

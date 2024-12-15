@@ -1,3 +1,4 @@
+local engine = require "nvim-highlight-hero.engine"
 local M = {}
 
 local function add_match_0_to_9(opts)
@@ -23,9 +24,8 @@ local default_opts = add_match_0_to_9({
 })
 
 -- Set up user-configured keymaps, globally or for the buffer.
----@param buffer boolean Whether the keymaps should be set for the buffer or not.
+---@param buffer boolean whether the keymaps should be set for the buffer or not.
 function M.set_keymaps(buffer)
-  local engine = require("nvim-highlight-hero.engine")
   M.set_keymap({
     name = "Toggle auto-highlight",
     mode = "n",
@@ -124,19 +124,18 @@ end
 -- Check if a keymap should be added before setting it.
 ---@param args table The arguments to set the keymap.
 function M.set_keymap(args)
-    -- If the keymap is disabled
-    if not args.lhs then
-        -- If the mapping is disabled globally, do nothing
-        if not M.user_opts.keymaps[args.name] then
-            return
-        end
-        -- Otherwise disable the global keymap
-        args.lhs = M.user_opts.keymaps[args.name]
-        args.rhs = "<NOP>"
+  -- If the keymap is disabled
+  if not args.rhs then
+    -- If the mapping is disabled globally, do nothing
+    if not M.user_opts.keymaps[args.name] then
+      return
     end
-    vim.keymap.set(args.mode, args.lhs, args.rhs, args.opts)
+    -- Otherwise disable the global keymap
+    args.lhs = M.user_opts.keymaps[args.name]
+    args.rhs = "<NOP>"
+  end
+  vim.keymap.set(args.mode, args.lhs, args.rhs, args.opts)
 end
-
 
 -- Returns the buffer-local options for the plugin, or global options if buffer-local does not exist.
 ---@return options @The buffer-local options.
@@ -144,12 +143,11 @@ function M.get_opts()
   return vim.b[0].nvim_highlight_hero_opts or M.user_opts
 end
 
-
 function M.setup(user_opts)
   M.user_opts = M.merge_opts(M.translate_opts(default_opts), user_opts)
   M.set_keymaps(false)
   vim.cmd([[
-    highlight default link NvimHighlightHeroAuto CursorLineFold
+    highlight default link NvimHighlightHeroAuto MatchParen
     highlight default link NvimHighlightHeroMatch1 StatusLine
     highlight default link NvimHighlightHeroMatch2 Substitute
     highlight default link NvimHighlightHeroMatch3 CursorColumn
@@ -161,6 +159,14 @@ function M.setup(user_opts)
     highlight default link NvimHighlightHeroMatch9 IncSearch
     highlight default link NvimHighlightHeroMatch0 TODO
   ]])
+
+  local group_id = vim.api.nvim_create_augroup("HighlightHero", { clear = true })
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    pattern = "*",
+    callback = engine.do_autohighlight,
+    -- command = "silent! lua require('nvim-highlight-hero').on_cursor_moved()",
+    group = group_id
+  })
 end
 
 -- Setup the user options for the current buffer.
@@ -169,7 +175,6 @@ function M.buffer_setup(buffer_opts)
   vim.b[0].nvim_highlight_hero_opts = M.merge_opts(M.get_opts(), buffer_opts)
   M.set_keymaps(true)
 end
-
 
 -- Updates the buffer-local options for the plugin based on the input.
 ---@param base_opts options The base options that will be used for configuration.
@@ -183,7 +188,7 @@ end
 -- Translates the user-provided configuration into the internal form.
 ---@param opts options? The user-provided options.
 function M.translate_opts(opts)
-  -- TODO Add stuff here
+  -- TODO Add stuff here as needed
   -- -- SOFT DEPRECATION WARNINGS
   -- ---@diagnostic disable-next-line: undefined-field
   -- if opts and opts.highlight_motion then
@@ -195,6 +200,5 @@ function M.translate_opts(opts)
   -- end
   return opts
 end
-
 
 return M
