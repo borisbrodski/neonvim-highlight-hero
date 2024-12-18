@@ -55,7 +55,7 @@ The default key mappings include:
 Use the key mapping `<leader>hh` to toggle auto-highlight mode. When enabled, the plugin highlights the word under the cursor as you move.
 
 ### Highlight Groups
-- Highlight with a specific group (0-9):
+- Highlight with a specific group (1-9):
   ```
   :HH 2
   ```
@@ -114,7 +114,6 @@ highlight default link NvimHighlightHeroMatch6 TermCursor
 highlight default link NvimHighlightHeroMatch7 DiffDelete
 highlight default link NvimHighlightHeroMatch8 WildMenu
 highlight default link NvimHighlightHeroMatch9 IncSearch
-highlight default link NvimHighlightHeroMatch0 TODO
 ```
 
 ==============================================================================

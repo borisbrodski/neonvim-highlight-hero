@@ -52,7 +52,7 @@ function M.command_HH(args)
 	local parts = vim.split(arg, "%s+") -- split arguments by space
 	local num = tonumber(parts[1])
 
-	if num and num >= 0 and num <= 9 then
+	if num and num >= 1 and num <= 9 then
 		-- If user provided two args and second is 'off'
 		if parts[2] == "off" then
 			-- Remove all highlights for the given group

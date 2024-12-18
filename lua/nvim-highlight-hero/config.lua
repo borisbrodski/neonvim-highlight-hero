@@ -2,7 +2,7 @@ local engine = require("nvim-highlight-hero.engine")
 local M = {}
 
 -- Define default mappings:
--- For 0..9:
+-- For 1..9:
 -- Normal mode:
 --   <num>m -> highlight current word with boundaries
 --   <num>M -> append current word with boundaries
@@ -10,7 +10,7 @@ local M = {}
 --   <num>m -> highlight visual selection (no boundaries)
 --   <num>M -> append visual selection (no boundaries)
 local function add_numbered_mappings(opts)
-	for i = 0, 9 do
+	for i = 1, 9 do
 		-- Normal mode mappings
 		opts.keymaps[string.format("normal_match_%d", i)] = string.format("%dm", i)
 		opts.keymaps[string.format("normal_match_append_%d", i)] = string.format("%dM", i)
@@ -57,7 +57,7 @@ function M.set_keymaps(buffer)
 	})
 
 	-- Now set the number-based mappings for normal and visual mode
-	for i = 0, 9 do
+	for i = 1, 9 do
 		local normal_match = M.get_opts().keymaps[string.format("normal_match_%d", i)]
 		local normal_match_append = M.get_opts().keymaps[string.format("normal_match_append_%d", i)]
 		local visual_match = M.get_opts().keymaps[string.format("visual_match_%d", i)]
@@ -162,7 +162,6 @@ function M.setup(user_opts)
     highlight default link NvimHighlightHeroMatch7 DiffDelete
     highlight default link NvimHighlightHeroMatch8 WildMenu
     highlight default link NvimHighlightHeroMatch9 IncSearch
-    highlight default link NvimHighlightHeroMatch0 TODO
   ]])
 
 	local group_id = vim.api.nvim_create_augroup("HighlightHero", { clear = true })
